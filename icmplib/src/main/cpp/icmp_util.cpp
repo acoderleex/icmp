@@ -1,7 +1,7 @@
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "cppcoreguidelines-avoid-magic-numbers"
 //
-// Created by tony on 18.09.2019.
+// Created by tony on 27.11.2019.
 //
 
 #include "icmp_util.h"
@@ -108,7 +108,7 @@ ping(JNIEnv *env, int sock, u_short sequence, const int size, jbyte *pattern, js
     clock_gettime(CLOCK_MONOTONIC, &time_start);
     if (sendto(sock, packet_data, sizeof(packet_data), 0, (struct sockaddr *) &addr, sizeof(addr)) <
         0) {
-        __android_log_print(ANDROID_LOG_INFO, "ICMP", "----SEND_ERROR-----");
+        __android_log_print(ANDROID_LOG_INFO, "Tony", "----SEND_ERROR-----");
         char arrByte[10] = SEND_ERROR;
         int dataSize = sizeof(arrByte);
         jbyteArray byteArray = env->NewByteArray(dataSize);
@@ -119,19 +119,19 @@ ping(JNIEnv *env, int sock, u_short sequence, const int size, jbyte *pattern, js
     addr_len = sizeof(r_addr);
     int resp = recvfrom(sock, packet_data, sizeof(packet_data), 0, (struct sockaddr *) &r_addr,
                         &addr_len);
-    __android_log_print(ANDROID_LOG_INFO, "ICMP", "%d----recvfrom %s", resp, packet_data);
+    __android_log_print(ANDROID_LOG_INFO, "Tony", "%d----recvfrom %s", resp, packet_data);
 
 
     clock_gettime(CLOCK_MONOTONIC, &time_end);
     if (resp <= 0) {
-        __android_log_print(ANDROID_LOG_INFO, "ICMP", "----SEND_TIMEOUT-----");
+        __android_log_print(ANDROID_LOG_INFO, "Tony", "----SEND_TIMEOUT-----");
         char arrByte[10] = SEND_TIMEOUT;
         int dataSize = sizeof(arrByte);
         jbyteArray byteArray = env->NewByteArray(dataSize);
         env->SetByteArrayRegion(byteArray, 0, dataSize, (jbyte *) arrByte);
         return byteArray;
     }
-    double elapsed = ((double) (time_end.tv_nsec - time_start.tv_nsec)) / 1000000.0;
+//    double elapsed = ((double) (time_end.tv_nsec - time_start.tv_nsec)) / 1000000.0;
 //    return (int) ((time_end.tv_sec - time_start.tv_sec) * 1000.0 + elapsed);
     int dataSize = sizeof(packet_data);
     jbyteArray byteArray = env->NewByteArray(dataSize);
