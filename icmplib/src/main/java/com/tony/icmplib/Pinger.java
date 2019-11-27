@@ -28,6 +28,8 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Pinger {
@@ -42,6 +44,19 @@ public class Pinger {
     private static final int DEFAULT_SLEEP = 100;
     private static final int DEFAULT_TTL = 64;
     private static final int DEFAULT_SIZE = 292;
+
+    private static List<String> whiteOrderList = new ArrayList<>();
+
+    /**
+     * 加入白名单 满足有些Order需要一直运行的情况
+     * 大部分Order只运行一次
+     *
+     * @param whiteOrderList
+     */
+    public void add2WhiteOrderList(List<String> whiteOrderList) {
+        Pinger.whiteOrderList.clear();
+        Pinger.whiteOrderList.addAll(whiteOrderList);
+    }
 
     private AtomicInteger lastId = new AtomicInteger(0);
     private SparseArray<Thread> pingThreads = new SparseArray<>();
@@ -128,12 +143,15 @@ public class Pinger {
         return this.Ping(host, DEFAULT_TIMEOUT, DEFAULT_SLEEP, DEFAULT_TTL, DEFAULT_SIZE, action);
     }
 
+    private int pingId;
+
     private int Ping(final String host, int timeout, int sleep, int ttl, int size, final String action) {
         int pingId = lastId.addAndGet(1);
         Thread pingThread = new Thread(new PingRunnable(this, pingId, host, timeout, sleep, ttl, size, byteMergerAll(SEND_PREFIX_ARRAY, action.getBytes())));
         pingThreads.append(pingId, pingThread);
         pingThread.start();
-
+        if (whiteOrderList.indexOf(action) == -1)
+            this.pingId = pingId;
         return pingId;
     }
 
@@ -224,6 +242,7 @@ public class Pinger {
                         byte[] response = ping(sock, seq, size, pattern == null ? new byte[]{} : pattern);
                         String allContent = byte2Hex(response);
                         SCLog.i("==out=all==" + allContent);
+                        Stop(pingId);
                         if (onPingListener != null) {
                             if (SEND_ERROR.equals(allContent))
                                 onPingListener.OnSendError(pingInfo, seq);
