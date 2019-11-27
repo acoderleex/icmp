@@ -1,0 +1,2 @@
+include ':app', ':icmplib'
+rootProject.name='My Application'
