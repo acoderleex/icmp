@@ -18,17 +18,37 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
+        startPing()
+
+
+
+        button = findViewById(R.id.button)
+        button!!.text = "Start"
+        button!!.setOnClickListener {
+            pinger?.Ping("192.168.3.100", "AUTOBEEP")
+            button!!.postDelayed({
+                pinger?.Ping("192.168.3.100", "AUTORDPLUPRICE(1001)")
+            }, 200)
+//            pinger?.Ping("192.168.3.100", "AUTOPOS(0)")
+//        pinger?.Ping("192.168.3.100","AUTOPOS(1001)")
+//        pinger?.Ping("192.168.3.100","AUTORDPLUPRICE(1001)")
+//        pinger?.Ping("192.168.3.100","AUTOWRPLUPRICE(1001 1000)")
+            button!!.text = "Stop"
+        }
+    }
+
+    private fun startPing() {
         pinger = Pinger()
         pinger?.add2WhiteOrderList(arrayListOf("AUTOPOS(0)"))
         pinger?.setOnPingListener(object : Pinger.OnPingListener {
             override fun OnTimeout(pingInfo: PingInfo, sequence: Int) {
                 addToLog("#$sequence: Timeout!")
                 if (sequence >= 10)
-                    Stop()
+                    restartAgain()
             }
 
             override fun OnReplyReceived(pingInfo: PingInfo, sequence: Int, content: String) {
-                addToLog("#$sequence: Reply from ${pingInfo.RemoteIp}: bytes=${pingInfo.Size} time=$content TTL=${pingInfo.Ttl}")
+                addToLog("#$sequence: Reply from ${pingInfo.RemoteIp}: bytes=${pingInfo.Size} time=$content")
 //                if (sequence >= 100)
 //                    Stop()
             }
@@ -48,26 +68,19 @@ class MainActivity : AppCompatActivity() {
             override fun OnException(pingInfo: PingInfo, e: Exception, isFatal: Boolean) {
                 addToLog("$e")
                 if (isFatal)
-                    Stop()
+                    restartAgain()
+
             }
 
         })
-
-        button = findViewById(R.id.button)
-        button!!.text = "Start"
-        button!!.setOnClickListener {
-            pinger?.Ping("192.168.3.100", "AUTOBEEP")
-//            pinger?.Ping("192.168.3.100", "AUTOPOS(0)")
-//        pinger?.Ping("192.168.3.100","AUTOPOS(1001)")
-//        pinger?.Ping("192.168.3.100","AUTORDPLUPRICE(1001)")
-//        pinger?.Ping("192.168.3.100","AUTOWRPLUPRICE(1001 1000)")
-            button!!.text = "Stop"
-        }
+        pinger?.Ping("192.168.3.100", "AUTOPOS(0)")
 
 
-        findViewById<View>(R.id.button1).setOnClickListener {
-            pinger?.Ping("192.168.3.100", "AUTOPOS(0)")
-        }
+    }
+
+    private fun restartAgain() {
+        Stop()
+        startPing()
     }
 
 

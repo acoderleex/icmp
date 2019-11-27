@@ -249,14 +249,16 @@ public class Pinger {
                     try {
                         byte[] response = ping(sock, seq, size, pattern == null ? new byte[]{} : pattern);
                         String allContent = byte2Hex(response);
-                        SCLog.i("==out=all==" + allContent);
+//                        SCLog.i("==out=all==" + allContent);
                         stopAllOncePingId();
                         if (onPingListener != null) {
-                            if (SEND_ERROR.equals(allContent))
+                            if (SEND_ERROR.equals(allContent)) {
+                                SCLog.i("==out=all=SEND_ERROR=");
                                 onPingListener.OnSendError(pingInfo, seq);
-                            else if (SEND_TIMEOUT.equals(allContent))
+                            } else if (SEND_TIMEOUT.equals(allContent)) {
+                                SCLog.i("==out=all=SEND_TIMEOUT=");
                                 onPingListener.OnTimeout(pingInfo, seq);
-                            else {
+                            } else {
                                 if (allContent.contains(SEND_PREFIX)) {
                                     String content = allContent.substring(16 + SEND_PREFIX.length(), 16 * 2 * 3 + SEND_PREFIX.length());
                                     content = hexToString(content);
