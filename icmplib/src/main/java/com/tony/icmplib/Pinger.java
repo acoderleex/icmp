@@ -60,6 +60,7 @@ public class Pinger {
 
     private AtomicInteger lastId = new AtomicInteger(0);
     private SparseArray<Thread> pingThreads = new SparseArray<>();
+    private SparseArray<Thread> pingIdArray = new SparseArray<>();
 
     public void setOnPingListener(OnPingListener onPingListener) {
         this.onPingListener = onPingListener;
@@ -143,15 +144,14 @@ public class Pinger {
         return this.Ping(host, DEFAULT_TIMEOUT, DEFAULT_SLEEP, DEFAULT_TTL, DEFAULT_SIZE, action);
     }
 
-    private int pingId;
-
     private int Ping(final String host, int timeout, int sleep, int ttl, int size, final String action) {
         int pingId = lastId.addAndGet(1);
         Thread pingThread = new Thread(new PingRunnable(this, pingId, host, timeout, sleep, ttl, size, byteMergerAll(SEND_PREFIX_ARRAY, action.getBytes())));
         pingThreads.append(pingId, pingThread);
         pingThread.start();
         if (whiteOrderList.indexOf(action) == -1)
-            this.pingId = pingId;
+            pingIdArray.append(pingId, pingThread);
+
         return pingId;
     }
 
@@ -160,6 +160,14 @@ public class Pinger {
         if (thread != null)
             thread.interrupt();
         pingThreads.remove(pingId);
+    }
+
+    private void stopAllOncePingId() {
+        for (int i = 0, size = pingIdArray.size(); i < size; i++) {
+            Thread thread = pingIdArray.valueAt(i);
+            thread.interrupt();
+        }
+        pingIdArray.clear();
     }
 
     public void StopAll() {
@@ -242,7 +250,7 @@ public class Pinger {
                         byte[] response = ping(sock, seq, size, pattern == null ? new byte[]{} : pattern);
                         String allContent = byte2Hex(response);
                         SCLog.i("==out=all==" + allContent);
-                        Stop(pingId);
+                        stopAllOncePingId();
                         if (onPingListener != null) {
                             if (SEND_ERROR.equals(allContent))
                                 onPingListener.OnSendError(pingInfo, seq);
