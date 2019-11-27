@@ -24,8 +24,6 @@ package com.tony.icmplib;
 
 import android.util.SparseArray;
 
-import androidx.annotation.NonNull;
-
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.SocketException;
@@ -262,16 +260,16 @@ public class Pinger {
     }
 
     public interface OnPingListener {
-        void OnStart(@NonNull PingInfo pingInfo);
+        void OnStart(PingInfo pingInfo);
 
-        void OnStop(@NonNull PingInfo pingInfo);
+        void OnStop(PingInfo pingInfo);
 
-        void OnSendError(@NonNull PingInfo pingInfo, int sequence);
+        void OnSendError(PingInfo pingInfo, int sequence);
 
-        void OnReplyReceived(@NonNull PingInfo pingInfo, int sequence, String allContent);
+        void OnReplyReceived(PingInfo pingInfo, int sequence, String allContent);
 
-        void OnTimeout(@NonNull PingInfo pingInfo, int sequence);
+        void OnTimeout(PingInfo pingInfo, int sequence);
 
-        void OnException(@NonNull PingInfo pingInfo, @NonNull Exception e, boolean isFatal);
+        void OnException(PingInfo pingInfo, Exception e, boolean isFatal);
     }
 }
