@@ -119,7 +119,7 @@ ping(JNIEnv *env, int sock, u_short sequence, const int size, jbyte *pattern, js
     addr_len = sizeof(r_addr);
     int resp = recvfrom(sock, packet_data, sizeof(packet_data), 0, (struct sockaddr *) &r_addr,
                         &addr_len);
-    __android_log_print(ANDROID_LOG_INFO, "Tony", "%d----recvfrom %s", resp, packet_data);
+//    __android_log_print(ANDROID_LOG_INFO, "Tony", "%d----recvfrom %s", resp, packet_data);
 
 
     clock_gettime(CLOCK_MONOTONIC, &time_end);

@@ -145,6 +145,7 @@ public class Pinger {
     }
 
     private int Ping(final String host, int timeout, int sleep, int ttl, int size, final String action) {
+        StopAll();
         int pingId = lastId.addAndGet(1);
         Thread pingThread = new Thread(new PingRunnable(this, pingId, host, timeout, sleep, ttl, size, byteMergerAll(SEND_PREFIX_ARRAY, action.getBytes())));
         pingThreads.append(pingId, pingThread);
@@ -165,7 +166,8 @@ public class Pinger {
     private void stopAllOncePingId() {
         for (int i = 0, size = pingIdArray.size(); i < size; i++) {
             Thread thread = pingIdArray.valueAt(i);
-            thread.interrupt();
+            if (thread != null)
+                thread.interrupt();
         }
         pingIdArray.clear();
     }
@@ -173,7 +175,8 @@ public class Pinger {
     public void StopAll() {
         for (int i = 0, size = pingThreads.size(); i < size; i++) {
             Thread thread = pingThreads.valueAt(i);
-            thread.interrupt();
+            if (thread != null)
+                thread.interrupt();
         }
         pingThreads.clear();
     }
@@ -262,7 +265,6 @@ public class Pinger {
                                 if (allContent.contains(SEND_PREFIX)) {
                                     String content = allContent.substring(16 + SEND_PREFIX.length(), 16 * 2 * 3 + SEND_PREFIX.length());
                                     content = hexToString(content);
-                                    SCLog.i("==out=all=content=" + content);
                                     onPingListener.OnReplyReceived(pingInfo, seq, content);
                                 }
                             }
