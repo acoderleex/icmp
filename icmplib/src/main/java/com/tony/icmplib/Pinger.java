@@ -24,6 +24,7 @@ package com.tony.icmplib;
 
 import android.util.SparseArray;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.SocketException;
@@ -144,7 +145,7 @@ public class Pinger {
         return this.Ping(host, DEFAULT_TIMEOUT, DEFAULT_SLEEP, DEFAULT_TTL, DEFAULT_SIZE, action);
     }
 
-    private int Ping(final String host, int timeout, int sleep, int ttl, int size, final String action) {
+    public int Ping(final String host, int timeout, int sleep, int ttl, int size, final String action) {
         StopAll();
         int pingId = lastId.addAndGet(1);
         Thread pingThread = new Thread(new PingRunnable(this, pingId, host, timeout, sleep, ttl, size, byteMergerAll(SEND_PREFIX_ARRAY, action.getBytes())));
@@ -237,57 +238,71 @@ public class Pinger {
                 return;
             }
 
-            final int sock = createicmpsocket(hostAddress, timeout, ttl);
-            if (sock <= 0) {
-                if (onPingListener != null)
-                    onPingListener.OnException(pingInfo, new SocketException(), true);
-                return;
-            }
-            if (onPingListener != null)
-                onPingListener.OnStart(pingInfo);
-            char seq = 1;
             try {
-                //noinspection InfiniteLoopStatement
-                while (true) {
-                    try {
-                        byte[] response = ping(sock, seq, size, pattern == null ? new byte[]{} : pattern);
-                        String allContent = byte2Hex(response);
+                if (address.isReachable(100))
+                    doPingAction(hostAddress, timeout, sleep, ttl, pingInfo, size, pattern, onPingListener);
+                else {
+                    if (onPingListener != null)
+                        onPingListener.OnException(pingInfo, new NoNetworkException(), true);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+
+            }
+        }
+    }
+
+
+    private void doPingAction(String hostAddress, int timeout, int sleep, int ttl, PingInfo pingInfo, int size, final byte[] pattern, OnPingListener onPingListener) {
+        final int sock = createicmpsocket(hostAddress, timeout, ttl);
+        if (sock <= 0) {
+            if (onPingListener != null)
+                onPingListener.OnException(pingInfo, new SocketException(), true);
+            return;
+        }
+        if (onPingListener != null)
+            onPingListener.OnStart(pingInfo);
+        char seq = 1;
+        try {
+            //noinspection InfiniteLoopStatement
+            while (true) {
+                try {
+                    byte[] response = ping(sock, seq, size, pattern == null ? new byte[]{} : pattern);
+                    String allContent = byte2Hex(response);
 //                        SCLog.i("==out=all==" + allContent);
-                        stopAllOncePingId();
-                        if (onPingListener != null) {
-                            if (SEND_ERROR.equals(allContent)) {
-                                SCLog.i("==out=all=SEND_ERROR=");
-                                onPingListener.OnSendError(pingInfo, seq);
-                            } else if (SEND_TIMEOUT.equals(allContent)) {
-                                SCLog.i("==out=all=SEND_TIMEOUT=");
-                                onPingListener.OnTimeout(pingInfo, seq);
-                            } else {
-                                if (allContent.contains(SEND_PREFIX)) {
-                                    String content = allContent.substring(16 + SEND_PREFIX.length(), 16 * 2 * 3 + SEND_PREFIX.length());
-                                    content = hexToString(content);
-                                    onPingListener.OnReplyReceived(pingInfo, seq, content);
-                                }
+                    stopAllOncePingId();
+                    if (onPingListener != null) {
+                        if (SEND_ERROR.equals(allContent)) {
+                            SCLog.i("==out=all=SEND_ERROR=");
+                            onPingListener.OnSendError(pingInfo, seq);
+                        } else if (SEND_TIMEOUT.equals(allContent)) {
+                            SCLog.i("==out=all=SEND_TIMEOUT=");
+                            onPingListener.OnTimeout(pingInfo, seq);
+                        } else {
+                            if (allContent.contains(SEND_PREFIX)) {
+                                String content = allContent.substring(16 + SEND_PREFIX.length(), 16 * 2 * 3 + SEND_PREFIX.length());
+                                content = hexToString(content);
+                                onPingListener.OnReplyReceived(pingInfo, seq, content);
                             }
                         }
-                        Thread.sleep(sleep);
-                        seq++;
-                    } catch (InterruptedException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        if (onPingListener != null)
-                            onPingListener.OnException(pingInfo, e, true);
-
                     }
+                    Thread.sleep(sleep);
+                    seq++;
+                } catch (InterruptedException e) {
+                    throw e;
+                } catch (Exception e) {
+                    if (onPingListener != null)
+                        onPingListener.OnException(pingInfo, e, true);
+
                 }
-
-            } catch (InterruptedException e) {
-                // it's ok
             }
-            if (onPingListener != null)
-                onPingListener.OnStop(pingInfo);
-            closeicmpsocket(sock);
 
+        } catch (InterruptedException e) {
+            // it's ok
         }
+        if (onPingListener != null)
+            onPingListener.OnStop(pingInfo);
+        closeicmpsocket(sock);
     }
 
     public interface OnPingListener {
