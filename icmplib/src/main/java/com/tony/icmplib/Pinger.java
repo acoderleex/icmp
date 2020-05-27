@@ -126,11 +126,7 @@ public class Pinger {
     }
 
     private byte[] byteMergerAll(byte[]... values) {
-        int length_byte = 0;
-        for (int i = 0; i < values.length; i++) {
-            length_byte += values[i].length;
-        }
-        byte[] all_byte = new byte[length_byte];
+        byte[] all_byte = new byte[DEFAULT_SIZE];
         int countLength = 0;
         for (int i = 0; i < values.length; i++) {
             byte[] b = values[i];
@@ -139,7 +135,6 @@ public class Pinger {
         }
         return all_byte;
     }
-
 
     public int Ping(String host, String action) {
         return this.Ping(host, DEFAULT_TIMEOUT, DEFAULT_SLEEP, DEFAULT_TTL, DEFAULT_SIZE, action);

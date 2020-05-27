@@ -108,7 +108,7 @@ ping(JNIEnv *env, int sock, u_short sequence, const int size, jbyte *pattern, js
     clock_gettime(CLOCK_MONOTONIC, &time_start);
     if (sendto(sock, packet_data, sizeof(packet_data), 0, (struct sockaddr *) &addr, sizeof(addr)) <
         0) {
-        __android_log_print(ANDROID_LOG_INFO, "Tony", "----SEND_ERROR-----");
+//        __android_log_print(ANDROID_LOG_INFO, "Tony", "----SEND_ERROR-----");
         char arrByte[10] = SEND_ERROR;
         int dataSize = sizeof(arrByte);
         jbyteArray byteArray = env->NewByteArray(dataSize);
@@ -124,7 +124,7 @@ ping(JNIEnv *env, int sock, u_short sequence, const int size, jbyte *pattern, js
 
     clock_gettime(CLOCK_MONOTONIC, &time_end);
     if (resp <= 0) {
-        __android_log_print(ANDROID_LOG_INFO, "Tony", "----SEND_TIMEOUT-----");
+//        __android_log_print(ANDROID_LOG_INFO, "Tony", "----SEND_TIMEOUT-----");
         char arrByte[10] = SEND_TIMEOUT;
         int dataSize = sizeof(arrByte);
         jbyteArray byteArray = env->NewByteArray(dataSize);
